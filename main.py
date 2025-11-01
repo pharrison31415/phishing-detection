@@ -72,22 +72,6 @@ EMAIL_RE = re.compile(r"([A-Za-z0-9._%+\-]+)@([A-Za-z0-9.\-]+\.[A-Za-z]{2,})")
 URL_RE = re.compile(r"https?://\S+|www\.\S+", re.IGNORECASE)
 
 
-def extract_sender_email_domain(sender):
-    if pd.isna(sender):
-        return "", ""
-    s = str(sender)
-    m = EMAIL_RE.search(s)
-    if m:
-        return m.group(0).lower(), m.group(2).lower()
-    return "", ""
-
-
-def count_urls(s):
-    if pd.isna(s):
-        return 0
-    return len(URL_RE.findall(str(s)))
-
-
 # =========================
 # Main
 # =========================
