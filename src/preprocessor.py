@@ -1,6 +1,7 @@
 import html
 import re
 import pandas as pd
+from src.constants import EMAIL_RE, URL_RE
 
 
 def clean_text(s: str) -> str:

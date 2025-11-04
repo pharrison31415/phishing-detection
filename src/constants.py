@@ -1,3 +1,6 @@
+from pathlib import Path
+import re
+
 ARTIFACT_DIR = Path("./artifacts")
 
 RANDOM_STATE = 42

@@ -2,6 +2,17 @@ import re
 import csv
 import pandas as pd
 from src.preprocessor import clean_text, extract_sender_email_domain, count_urls
+from src.constants import (
+    ARTIFACT_DIR,
+    KEYWORDS,
+    TEST_SIZE,
+    RANDOM_STATE,
+    TFIDF_MAX_FEATURES,
+    TFIDF_MIN_DF,
+    TFIDF_NGRAM_RANGE,
+    RF_TREES,
+)
+
 from scipy.sparse import csr_matrix, hstack
 
 from sklearn.model_selection import train_test_split
@@ -38,7 +49,7 @@ def main():
     set_csv_field_size_limit()
 
     # ---- Load ----
-    print(f"[INFO] Loading csv")
+    print("[INFO] Loading csv")
     df = pd.read_csv(
         "data/CEAS_08.csv",
         sep=",",
