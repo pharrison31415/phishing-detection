@@ -15,9 +15,6 @@ from src.constants import (
 
 from scipy.sparse import csr_matrix, hstack
 
-from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.preprocessing import StandardScaler
 from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import LinearSVC
@@ -91,7 +88,6 @@ def main():
             | (df["body_clean"].str.contains(rf"\b{re.escape(kw)}\b", na=False))
         ).astype(int)
 
-    # coerce label and urls
     y = pd.to_numeric(df["label"], errors="coerce").fillna(0).astype(int)
     df["urls_numeric"] = (
         pd.to_numeric(df["urls"], errors="coerce").fillna(0).astype(int)

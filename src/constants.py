@@ -18,7 +18,7 @@ TFIDF_NGRAM_RANGE = (1, 1)  # unigrams only for speed/memory
 # RandomForest knobs
 RF_TREES = 200  # small-ish to keep runtime tame
 
-# Keyword flags (quick heuristics)
+# Keyword flags (quick heuristics) # TODO: Why do we have this? These would be automatically handled by the CountVectorizer
 KEYWORDS = [
     "viagra",
     "winner",
