@@ -3,21 +3,16 @@ import re
 import pandas as pd
 from src.constants import (
     EMAIL_RE,
-    TFIDF_MAX_FEATURES,
     RANDOM_STATE,
-    TFIDF_NGRAM_RANGE,
     TEST_SIZE,
-    TFIDF_MIN_DF,
 )
 from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import make_pipeline
-from sklearn.compose import ColumnTransformer
-from sklearn.impute import SimpleImputer
 
 
 def clean_text(s: str) -> str:
+    if type(s) != str:
+        return ""
+
     if len(s) == 0:
         return ""
     s = html.unescape(str(s))
@@ -60,29 +55,5 @@ def preprocess_emails(data: pd.DataFrame):
         X, y, test_size=TEST_SIZE, random_state=RANDOM_STATE
     )
 
-    num_cols = [
-        "subject_len",
-        "body_len",
-        "exclaim_count",
-    ]
-
-    col_transformer = ColumnTransformer(transformers=[
-        (make_pipeline(
-        SimpleImputer(strategy="constant", fill_value=""),
-            TfidfVectorizer(
-            max_features=TFIDF_MAX_FEATURES,
-            ngram_range=TFIDF_NGRAM_RANGE,  # (1,1) = unigrams only
-            min_df=TFIDF_MIN_DF,)
-        ),['text']),
-        (make_pipeline(
-            SimpleImputer(strategy="mean"),
-            StandardScaler()
-        ),num_cols)
-    ])
-
-    X_train = col_transformer.fit_transform(X_train)
-    X_test = col_transformer.transform(X_test)
-    # TF-IDF on combined text
-
     # ---- Train/test split ----
-    return X_train, X_test, y_train, y_test, col_transformer  # coerce label and urls
+    return X_train, X_test, y_train, y_test
