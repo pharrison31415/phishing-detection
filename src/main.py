@@ -1,7 +1,7 @@
 import re
 import csv
 import pandas as pd
-from src.preprocessor import clean_text, extract_sender_email_domain, count_urls
+from src.preprocessor import preprocess_emails
 from src.constants import (
     ARTIFACT_DIR,
     KEYWORDS,
@@ -55,7 +55,7 @@ def main():
         on_bad_lines="warn",
     )
 
-    expected_cols = {"sender", "receiver", "date", "subject", "body", "label", "urls"}
+    expected_cols = {"subject", "body", "label"}
     missing = expected_cols.difference(df.columns)
     if missing:
         raise ValueError(
@@ -63,76 +63,8 @@ def main():
         )
 
     # ---- Preprocess ----
-    print("[INFO] Cleaning text fields...")
-    df["subject_clean"] = df["subject"].apply(clean_text)
-    df["body_clean"] = df["body"].apply(clean_text)
-    df["text"] = (
-        df["subject_clean"].fillna("") + " " + df["body_clean"].fillna("")
-    ).str.strip()
-
-    # ---- Metadata segmentation ----
-    print("[INFO] Extracting metadata features...")
-    df[["sender_email", "sender_domain"]] = df["sender"].apply(
-        lambda s: pd.Series(extract_sender_email_domain(s))
-    )
-
-    df["url_count_body"] = df["body"].apply(count_urls)
-    df["url_count_subj"] = df["subject"].apply(count_urls)
-    df["subject_len"] = df["subject_clean"].str.len().fillna(0)
-    df["body_len"] = df["body_clean"].str.len().fillna(0)
-    df["exclaim_count"] = df["body"].fillna("").astype(str).str.count("!")
-
-    for kw in KEYWORDS:
-        df[f"kw_{kw}"] = (
-            (df["subject_clean"].str.contains(rf"\b{re.escape(kw)}\b", na=False))
-            | (df["body_clean"].str.contains(rf"\b{re.escape(kw)}\b", na=False))
-        ).astype(int)
-
-    y = pd.to_numeric(df["label"], errors="coerce").fillna(0).astype(int)
-    df["urls_numeric"] = (
-        pd.to_numeric(df["urls"], errors="coerce").fillna(0).astype(int)
-    )
-
-    # ---- Feature representation ----
-    print("[INFO] Building features (TF-IDF + domain + numeric metadata)...")
-
-    # TF-IDF on combined text
-    tfidf = TfidfVectorizer(
-        max_features=TFIDF_MAX_FEATURES,
-        ngram_range=TFIDF_NGRAM_RANGE,  # (1,1) = unigrams only
-        min_df=TFIDF_MIN_DF,
-    )
-    X_text = tfidf.fit_transform(df["text"].fillna(""))
-
-    # Domains (CountVectorizer, min_df=2 to drop ultra-rare)
-    domain_vectorizer = CountVectorizer(min_df=2)
-    X_domain = domain_vectorizer.fit_transform(df["sender_domain"].fillna(""))
-
-    # Numeric features
-    num_cols = [
-        "url_count_body",
-        "url_count_subj",
-        "subject_len",
-        "body_len",
-        "exclaim_count",
-        "urls_numeric",
-    ] + [f"kw_{kw}" for kw in KEYWORDS]
-
-    X_num = df[num_cols].fillna(0).astype(float).values
-
-    # Standardize numeric features (with_mean=False for sparse compatibility)
-    scaler = StandardScaler(with_mean=False)
-    X_num_sparse = csr_matrix(scaler.fit_transform(X_num))
-
-    # Combine sparse blocks
-    X = hstack([X_text, X_domain, X_num_sparse]).tocsr()
-
-    # ---- Train/test split ----
-    print("[INFO] Splitting train/test (stratified)...")
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=TEST_SIZE, random_state=RANDOM_STATE, stratify=y
-    )
-
+    X_train, X_test, y_train, y_test, col_transformer = preprocess_emails(df)
+    #
     # ---- Models ----
     models = {
         "Dummy (Majority)": DummyClassifier(strategy="most_frequent"),
