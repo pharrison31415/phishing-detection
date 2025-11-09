@@ -12,7 +12,8 @@ URL_RE = re.compile(r"https?://\S+|www\.\S+", re.IGNORECASE)
 
 # TF-IDF knobs (kept lean to avoid timeouts on large data)
 TFIDF_MAX_FEATURES = 10000
-TFIDF_MIN_DF = 2
+TFIDF_MAX_DF = 0.9
+TFIDF_MIN_DF = 5
 TFIDF_NGRAM_RANGE = (1, 1)  # unigrams only for speed/memory
 
 # RandomForest knobs

@@ -1,12 +1,11 @@
 import csv
 import pandas as pd
-from src.preprocessor import preprocess_emails
+from src.preprocessor import preprocess_emails, scale_features
 from src.constants import (
     ARTIFACT_DIR,
     RANDOM_STATE,
     RF_TREES
 )
-
 from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import LinearSVC
@@ -21,7 +20,7 @@ from sklearn.metrics import (
 
 
 def set_csv_field_size_limit():
-    """Increase CSV field size limit for very long lines."""
+    """Increase CSV field size limit for very long lines,"""
     max_int = csv.field_size_limit()
     try:
         csv.field_size_limit(2**31 - 1)
@@ -55,8 +54,9 @@ def main():
         )
 
     # ---- Preprocess ----
-    X_train, X_test, y_train, y_test, col_transformer = preprocess_emails(df)
-    #
+    X_train, X_test, y_train, y_test = preprocess_emails(df)
+
+    X_train, X_test, col_transformer = scale_features(X_train, X_test)
     # ---- Models ----
     models = {
         "Dummy (Majority)": DummyClassifier(strategy="most_frequent"),
