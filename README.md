@@ -104,6 +104,14 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
+## Execution
+
+To train and test the model, run
+```bash
+python -m src.main
+```
+See output on standard out and model evaluation metrics in the `artifacts/` directory.
+
 ## Typical workflow
 
 - Load and clean CEAS_08.csv; stratified train/test split.
