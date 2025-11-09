@@ -101,7 +101,7 @@ python -m venv .venv
 3. Install requirements
 
 ```bash
-pip install -r requirements.txt -y
+pip install -r requirements.txt
 ```
 
 ## Typical workflow
