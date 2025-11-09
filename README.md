@@ -67,6 +67,7 @@ benign communication.
 ## Source data
 
 - Primary file: data/CEAS_08.csv
+- Data source: [naserabdullahalam on Kaggle](https://www.kaggle.com/datasets/naserabdullahalam/phishing-email-dataset?resource=download&select=CEAS_08.csv)
 - Expected columns:
   - subject: email subject line text
   - body: main email content text
