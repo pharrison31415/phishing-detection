@@ -98,7 +98,7 @@ def main():
     )
 
     # ---- Save artifacts ----
-    metrics_path = ARTIFACT_DIR / "CEAS08_metrics.csv"
+    metrics_path = ARTIFACT_DIR / "performance_metrics.csv"
     results_df.to_csv(metrics_path, index=False)
 
     report_paths = {}
