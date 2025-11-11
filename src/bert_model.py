@@ -38,9 +38,17 @@ def compute_metrics(eval_pred):
 
 def bert_main():
     print("[INFO] BERT model loading and preprocessing data...")
-    df = pd.read_csv("data/Enron.csv")
-    df.merge(pd.read_csv("data/Nazario.csv"))
-    df.merge(pd.read_csv("data/Nigerian_Fraud.csv"))
+    cols = ["subject", "body", "label"]
+    df = pd.read_csv("data/Enron.csv", usecols=cols)
+    # Use concat to stack datasets (merge performs joins and can drop rows)
+    df = pd.concat(
+        [
+            df,
+            pd.read_csv("data/Nazario.csv", usecols=cols),
+            pd.read_csv("data/Nigerian_Fraud.csv", usecols=cols),
+        ],
+        ignore_index=True,
+    )
 
     df.dropna(subset=['label'], inplace=True)
 
