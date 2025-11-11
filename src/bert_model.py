@@ -2,7 +2,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from src.preprocessor import clean_text
 from src.constants import RANDOM_STATE, TEST_SIZE
-from transformers import BertTokenizer, BertForSequenceClassification, Trainer, TrainingArguments
+from transformers import AutoTokenizer, Trainer, TrainingArguments, DistilBertForSequenceClassification
 import torch
 from torch.utils.data import Dataset
 import evaluate
@@ -38,7 +38,7 @@ def compute_metrics(eval_pred):
 
 def bert_main():
     print("[INFO] BERT model loading and preprocessing data...")
-    df = pd.read_csv("data/CEAS_08.csv")
+    df = pd.read_csv("data/Enron.csv")
     df.merge(pd.read_csv("data/Nazario.csv"))
     df.merge(pd.read_csv("data/Nigerian_Fraud.csv"))
 
@@ -62,7 +62,7 @@ def bert_main():
     )
 
     print("[INFO] Tokenizing text data...")
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+    tokenizer = AutoTokenizer.from_pretrained('distilbert-base-uncased')
     train_encodings = tokenize(tokenizer, x_train.tolist())
     val_encodings = tokenize(tokenizer, x_val.tolist())
     test_encodings = tokenize(tokenizer, x_test.tolist())
@@ -78,10 +78,10 @@ def bert_main():
     else:
         device = torch.device('cpu')
         print('Using CPU')
-    model = BertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=1).to(device)
+    model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-uncased', num_labels=1).to(device)
     training_args = TrainingArguments(
         output_dir='./results',
-        num_train_epochs=3,
+        num_train_epochs=5,
         per_device_train_batch_size=32,
         per_device_eval_batch_size=32,
         eval_strategy="epoch",
