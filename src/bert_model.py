@@ -38,18 +38,20 @@ def compute_metrics(eval_pred):
 
 def bert_main():
     print("[INFO] BERT model loading and preprocessing data...")
-    df = pd.read_csv("data/CEAS_08.csv") + pd.read_csv("data/Nazario.csv") + pd.read_csv("data/Nigerian_Fraud.csv")
+    df = pd.read_csv("data/CEAS_08.csv")
+    df.merge(pd.read_csv("data/Nazario.csv"))
+    df.merge(pd.read_csv("data/Nigerian_Fraud.csv"))
 
     df.dropna(subset=['label'], inplace=True)
 
-    df["text"] = f"Sender: ({df["sender"].apply(clean_text)}\n \
-        Receiver: {df["receiver"].apply(clean_text)}\n \
-        Date: {df["date"].apply(clean_text)}\n \
-        Subject: {df["subject"].apply(clean_text)}\n \
-        Body: {df["body"].apply(clean_text)}"
+    df["text"] = "Sender: "+df["sender"].apply(clean_text) + \
+    " Receiver: " + df["receiver"].apply(clean_text) + \
+    " Date: " + df["date"].apply(clean_text) + \
+    " Subject: " + df["subject"].apply(clean_text) + \
+    " Body: " + df["body"].apply(clean_text)
     
     x = df["text"]
-    y = df["label"]
+    y = df["label"].astype("float")
 
     x_train, x_other, y_train, y_other = train_test_split(
         x, y, test_size=TEST_SIZE, random_state=RANDOM_STATE
