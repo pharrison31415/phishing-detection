@@ -99,19 +99,31 @@ python -m venv .venv
 
 ```
 
+If that doesn't work, try this instead
+
+```bash
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+.\.venv\Scripts\Activate.ps1
+```
+
 3. Install requirements
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Execution
+Requirements I wasn't sure would work in the .txt file
 
-To train and test the model, run
+```
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu126
+pip install "transformers[torch]"
+```
+
+4. Run the file
+
 ```bash
 python -m src.main
 ```
-See output on standard out and model evaluation metrics in the `artifacts/` directory.
 
 ## Typical workflow
 
