@@ -38,12 +38,16 @@ def main():
 
     # ---- Load ----
     print("[INFO] Loading csv")
-    df = pd.read_csv(
-        "data/CEAS_08.csv",
-        sep=",",
-        quotechar='"',
-        engine="python",  # robust to quoted newlines
-        on_bad_lines="warn",
+    cols = ["subject", "body", "label"]
+    df = pd.read_csv("data/Enron.csv", usecols=cols)
+    # Use concat to stack datasets (merge performs joins and can drop rows)
+    df = pd.concat(
+        [
+            df,
+            pd.read_csv("data/Nazario.csv", usecols=cols),
+            pd.read_csv("data/Nigerian_Fraud.csv", usecols=cols),
+        ],
+        ignore_index=True,
     )
 
     expected_cols = {"subject", "body", "label"}
@@ -94,7 +98,7 @@ def main():
     )
 
     # ---- Save artifacts ----
-    metrics_path = ARTIFACT_DIR / "CEAS08_metrics.csv"
+    metrics_path = ARTIFACT_DIR / "performance_metrics.csv"
     results_df.to_csv(metrics_path, index=False)
 
     report_paths = {}
@@ -120,3 +124,6 @@ def main():
         print(f"[INFO] {name} report: {p}")
     for name, p in cm_paths.items():
         print(f"[INFO] {name} confusion matrix: {p}")
+
+if __name__ == "__main__":
+    main()
