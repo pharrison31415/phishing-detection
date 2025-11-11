@@ -61,7 +61,7 @@ def preprocess_emails(data: pd.DataFrame):
 
     print("[INFO] Splitting train/test (stratified)...")
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=TEST_SIZE, random_state=RANDOM_STATE
+        X, y, test_size=TEST_SIZE, random_state=RANDOM_STATE, stratify=y
     )
     print("X_train shape: ", X_train.shape)
     print("X_test shape: ", X_test.shape)
