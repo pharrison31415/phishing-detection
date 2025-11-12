@@ -32,9 +32,17 @@ class TextClassificationDataset(Dataset):
     
 def compute_metrics(eval_pred):
     accuracy_metric = evaluate.load("accuracy")
+    precision_metric = evaluate.load("precision")
+    recall_metric = evaluate.load("recall")
+    f1_metric = evaluate.load("f1")
     predictions, labels = eval_pred
     predictions = np.argmax(predictions, axis=1)
-    return accuracy_metric.compute(predictions=predictions, references=labels)
+    return {
+        "accuracy": accuracy_metric.compute(predictions=predictions, references=labels),
+        "precision": precision_metric.compute(predictions=predictions, references=labels, average="binary"),
+        "recall": recall_metric.compute(predictions=predictions, references=labels, average="binary"),
+        "f1": f1_metric.compute(predictions=predictions, references=labels, average="binary")
+    }
 
 def bert_main():
     print("[INFO] BERT model loading and preprocessing data...")
@@ -78,10 +86,10 @@ def bert_main():
     else:
         device = torch.device('cpu')
         print('Using CPU')
-    model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-uncased', num_labels=1).to(device)
+    model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-uncased', num_labels=2, finetuning_task="text-classification", problem_type = "single_label_classification").to(device)
     training_args = TrainingArguments(
         output_dir='./results',
-        num_train_epochs=5,
+        num_train_epochs=4,
         per_device_train_batch_size=32,
         per_device_eval_batch_size=32,
         eval_strategy="epoch",
