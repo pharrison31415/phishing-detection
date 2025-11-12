@@ -1,6 +1,6 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from src.preprocessor import clean_text
+from src.preprocessor import preprocess_emails
 from src.constants import RANDOM_STATE, TEST_SIZE
 from transformers import AutoTokenizer, Trainer, TrainingArguments, DistilBertForSequenceClassification
 import torch
@@ -52,18 +52,10 @@ def bert_main():
 
     df.dropna(subset=['label'], inplace=True)
 
-    df["text"] = "Sender: "+df["sender"].apply(clean_text) + \
-    " Receiver: " + df["receiver"].apply(clean_text) + \
-    " Date: " + df["date"].apply(clean_text) + \
-    " Subject: " + df["subject"].apply(clean_text) + \
-    " Body: " + df["body"].apply(clean_text)
-    
-    x = df["text"]
-    y = df["label"].astype("float")
+    x_train, x_other, y_train, y_other = preprocess_emails(df)
 
-    x_train, x_other, y_train, y_other = train_test_split(
-        x, y, test_size=TEST_SIZE, random_state=RANDOM_STATE
-    )
+    x_train.drop(columns=["subject_len", "body_len", "exclaim_count"])
+    x_other.drop(columns=["subject_len", "body_len", "exclaim_count"])
 
     x_val, x_test, y_val, y_test = train_test_split(
         x_other, y_other, test_size=0.5, random_state=RANDOM_STATE
@@ -71,13 +63,13 @@ def bert_main():
 
     print("[INFO] Tokenizing text data...")
     tokenizer = AutoTokenizer.from_pretrained('distilbert-base-uncased')
-    train_encodings = tokenize(tokenizer, x_train.tolist())
-    val_encodings = tokenize(tokenizer, x_val.tolist())
-    test_encodings = tokenize(tokenizer, x_test.tolist())
+    train_encodings = tokenize(tokenizer, x_train["text"].to_list())
+    val_encodings = tokenize(tokenizer, x_val["text"].to_list())
+    test_encodings = tokenize(tokenizer, x_test["text"].to_list())
     
-    train_dataset = TextClassificationDataset(train_encodings, y_train.tolist())
-    val_dataset = TextClassificationDataset(val_encodings, y_val.tolist())
-    test_dataset = TextClassificationDataset(test_encodings, y_test.tolist())
+    train_dataset = TextClassificationDataset(train_encodings, y_train.to_list())
+    val_dataset = TextClassificationDataset(val_encodings, y_val.to_list())
+    test_dataset = TextClassificationDataset(test_encodings, y_test.to_list())
 
     print("[INFO] Initializing BERT model...")
     if torch.cuda.is_available():

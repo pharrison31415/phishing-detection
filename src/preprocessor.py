@@ -56,7 +56,7 @@ def preprocess_emails(data: pd.DataFrame):
     data["body_len"] = data["body_clean"].str.len().fillna(0)
     data["exclaim_count"] = data["body"].fillna("").astype(str).str.count("!")
 
-    y = data["label"]
+    y = data["label"].astype("float")
     X = data[["text", "subject_len", "body_len", "exclaim_count"]]
 
     print("[INFO] Splitting train/test (stratified)...")
