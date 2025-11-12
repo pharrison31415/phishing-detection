@@ -1,8 +1,8 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from src.preprocessor import clean_text
+from src.preprocessor import preprocess_emails
 from src.constants import RANDOM_STATE, TEST_SIZE
-from transformers import BertTokenizer, BertForSequenceClassification, Trainer, TrainingArguments
+from transformers import AutoTokenizer, Trainer, TrainingArguments, DistilBertForSequenceClassification
 import torch
 from torch.utils.data import Dataset
 import evaluate
@@ -32,9 +32,17 @@ class TextClassificationDataset(Dataset):
     
 def compute_metrics(eval_pred):
     accuracy_metric = evaluate.load("accuracy")
+    precision_metric = evaluate.load("precision")
+    recall_metric = evaluate.load("recall")
+    f1_metric = evaluate.load("f1")
     predictions, labels = eval_pred
     predictions = np.argmax(predictions, axis=1)
-    return accuracy_metric.compute(predictions=predictions, references=labels)
+    return {
+        "accuracy": accuracy_metric.compute(predictions=predictions, references=labels),
+        "precision": precision_metric.compute(predictions=predictions, references=labels, average="binary"),
+        "recall": recall_metric.compute(predictions=predictions, references=labels, average="binary"),
+        "f1": f1_metric.compute(predictions=predictions, references=labels, average="binary")
+    }
 
 def bert_main():
     print("[INFO] BERT model loading and preprocessing data...")
@@ -52,32 +60,24 @@ def bert_main():
 
     df.dropna(subset=['label'], inplace=True)
 
-    df["text"] = "Sender: "+df["sender"].apply(clean_text) + \
-    " Receiver: " + df["receiver"].apply(clean_text) + \
-    " Date: " + df["date"].apply(clean_text) + \
-    " Subject: " + df["subject"].apply(clean_text) + \
-    " Body: " + df["body"].apply(clean_text)
-    
-    x = df["text"]
-    y = df["label"].astype("float")
+    x_train, x_other, y_train, y_other = preprocess_emails(df)
 
-    x_train, x_other, y_train, y_other = train_test_split(
-        x, y, test_size=TEST_SIZE, random_state=RANDOM_STATE
-    )
+    x_train.drop(columns=["subject_len", "body_len", "exclaim_count"])
+    x_other.drop(columns=["subject_len", "body_len", "exclaim_count"])
 
     x_val, x_test, y_val, y_test = train_test_split(
         x_other, y_other, test_size=0.5, random_state=RANDOM_STATE
     )
 
     print("[INFO] Tokenizing text data...")
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-    train_encodings = tokenize(tokenizer, x_train.tolist())
-    val_encodings = tokenize(tokenizer, x_val.tolist())
-    test_encodings = tokenize(tokenizer, x_test.tolist())
+    tokenizer = AutoTokenizer.from_pretrained('distilbert-base-uncased')
+    train_encodings = tokenize(tokenizer, x_train["text"].to_list())
+    val_encodings = tokenize(tokenizer, x_val["text"].to_list())
+    test_encodings = tokenize(tokenizer, x_test["text"].to_list())
     
-    train_dataset = TextClassificationDataset(train_encodings, y_train.tolist())
-    val_dataset = TextClassificationDataset(val_encodings, y_val.tolist())
-    test_dataset = TextClassificationDataset(test_encodings, y_test.tolist())
+    train_dataset = TextClassificationDataset(train_encodings, y_train.to_list())
+    val_dataset = TextClassificationDataset(val_encodings, y_val.to_list())
+    test_dataset = TextClassificationDataset(test_encodings, y_test.to_list())
 
     print("[INFO] Initializing BERT model...")
     if torch.cuda.is_available():
@@ -86,10 +86,10 @@ def bert_main():
     else:
         device = torch.device('cpu')
         print('Using CPU')
-    model = BertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=1).to(device)
+    model = DistilBertForSequenceClassification.from_pretrained('distilbert-base-uncased', num_labels=2, finetuning_task="text-classification", problem_type = "single_label_classification").to(device)
     training_args = TrainingArguments(
         output_dir='./results',
-        num_train_epochs=3,
+        num_train_epochs=4,
         per_device_train_batch_size=32,
         per_device_eval_batch_size=32,
         eval_strategy="epoch",
