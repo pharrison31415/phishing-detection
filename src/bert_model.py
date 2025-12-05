@@ -44,7 +44,7 @@ def compute_metrics(eval_pred):
         "f1": f1_metric.compute(predictions=predictions, references=labels, average="binary")
     }
 
-def bert_main():
+def main():
     print("[INFO] BERT model loading and preprocessing data...")
     cols = ["subject", "body", "label"]
     df = pd.read_csv("data/Enron.csv", usecols=cols)
@@ -111,3 +111,7 @@ def bert_main():
     print("[INFO] Evaluating BERT model...")
     test_results = trainer.evaluate(eval_dataset=test_dataset)
     print("Model Evaluation Summary (BERT):", test_results)
+
+
+if __name__ == "__main__":
+    main()

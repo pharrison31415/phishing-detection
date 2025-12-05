@@ -52,27 +52,26 @@ benign communication.
     - Baselines: TF‑IDF on subject/body with simple metadata features (e.g., URL presence/count).
     - Deep learning: Transformer embeddings over subject/body; optionally incorporate structured metadata.
 3. Models
-    - Baselines: Dummy (majority class), Random Forest, SVM.
-    - Deep model (in development): Fine‑tuned transformer classifier.
+   - Baselines: Dummy (majority class), Random Forest, SVM on TF-IDF features (with and without additional feature engineering).
+   - Deep model: Fine‑tuned BERT transformer classifier.
 4. Evaluation
     - Stratified train/test split; metrics: Accuracy, Precision, Recall, F1.
     - Emphasize Recall to minimize false negatives (missed phishing).
 
-## Experiments (planned)
+## Experiments
 
-- Stage 1: Preprocess data; train/evaluate Dummy, Random Forest, SVM on TF‑IDF + metadata features.
-- Stage 2: Fine‑tune transformer on subject/body (+ optional metadata); tune learning rate, batch size, epochs.
-- Stage 3: Compare metrics across all models; perform error and recall‑focused analysis.
+- Stage 1: Preprocess data; train/evaluate Dummy, Random Forest, SVM on TF‑IDF features (with and without additional feature engineering).
+- Stage 2: Fine‑tune BERT transformer on subject/body; evaluate performance.
+- Stage 3: Compare metrics across all models; analyze confusion matrices and recall‑focused results.
 
 ## Source data
 
-- Primary file: data/CEAS_08.csv
-- Data source: [naserabdullahalam on Kaggle](https://www.kaggle.com/datasets/naserabdullahalam/phishing-email-dataset?resource=download&select=CEAS_08.csv)
+- Primary files: data/Enron.csv, data/Nazario.csv, data/Nigerian_Fraud.csv
+- Data sources: Publicly available phishing and legitimate email datasets (Enron, Nazario, Nigerian Fraud collections)
 - Expected columns:
   - subject: email subject line text
   - body: main email content text
-  - urls: binary or count feature indicating presence/number of URLs
-  - label: phishing vs. legitimate
+  - label: phishing vs. legitimate (0 for legitimate, 1 for phishing)
 - Notes:
   - Ensure UTF‑8 encoding and consistent headers.
   - If your CSV uses different column names or encodings, adjust preprocessing accordingly.
@@ -99,13 +98,6 @@ python -m venv .venv
 
 ```
 
-If that doesn't work, try this instead
-
-```bash
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
-.\.venv\Scripts\Activate.ps1
-```
-
 3. Install requirements
 
 ```bash
@@ -119,22 +111,22 @@ pip install torch torchvision --index-url https://download.pytorch.org/whl/cu126
 pip install "transformers[torch]"
 ```
 
-4. Run the file
+4. Run the models
 
-```bash
-python -m src.main
-```
+- Baseline models with feature engineering: `python src/baseline_models.py`
+- Baseline models without feature engineering (TF-IDF only): `python src/baseline_no_engineering.py`
+- BERT model: `python src/bert_model.py`
 
 ## Typical workflow
 
-- Load and clean CEAS_08.csv; stratified train/test split.
+- Load and clean datasets (Enron.csv, Nazario.csv, Nigerian_Fraud.csv); stratified train/test split.
 - Vectorize:
-  - Baseline: TF‑IDF (unigrams/bigrams) on subject/body + simple metadata features.
-  - Deep: Tokenize for transformer; build inputs from subject/body (+ optional metadata).
+  - Baseline: TF‑IDF (unigrams/bigrams) on subject/body (+ optional feature engineering).
+  - Deep: Tokenize for BERT; build inputs from subject/body.
 - Train/evaluate:
   - Baselines: Dummy, Random Forest, SVM.
-  - Deep: Fine‑tuned transformer classifier.
-- Report Accuracy, Precision, Recall, F1; analyze confusion matrix and hard errors.
+  - Deep: Fine‑tuned BERT classifier.
+- Report Accuracy, Precision, Recall, F1; analyze confusion matrix and hard errors. Artifacts saved to artifacts/ directory.
 
 ## Notes and considerations
 

@@ -1,32 +1,28 @@
-import csv
 import pandas as pd
-from src.preprocessor import preprocess_emails, scale_features
+from sklearn.dummy import DummyClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import (
+    accuracy_score,
+    classification_report,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+)
+from sklearn.svm import LinearSVC
+
 from src.constants import (
     ARTIFACT_DIR,
     RANDOM_STATE,
-    RF_TREES
+    RF_TREES,
+    TFIDF_MAX_DF,
+    TFIDF_MAX_FEATURES,
+    TFIDF_MIN_DF,
+    TFIDF_NGRAM_RANGE,
 )
-from sklearn.dummy import DummyClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.svm import LinearSVC
-from sklearn.metrics import (
-    accuracy_score,
-    precision_score,
-    recall_score,
-    f1_score,
-    classification_report,
-    confusion_matrix,
-)
-
-
-def set_csv_field_size_limit():
-    """Increase CSV field size limit for very long lines,"""
-    max_int = csv.field_size_limit()
-    try:
-        csv.field_size_limit(2**31 - 1)
-    except OverflowError:
-        # Fallback just in case
-        csv.field_size_limit(max_int)
+from src.preprocessor import preprocess_emails, scale_features, clean_text
+from src.baseline_models import set_csv_field_size_limit
 
 
 # =========================
@@ -58,9 +54,17 @@ def main():
         )
 
     # ---- Preprocess ----
-    X_train, X_test, y_train, y_test = preprocess_emails(df)
+    X_train, X_test, y_train, y_test = preprocess_emails(df, features=False)
+    vectorizer = TfidfVectorizer(
+        max_features=TFIDF_MAX_FEATURES,
+        ngram_range=TFIDF_NGRAM_RANGE,
+        min_df=TFIDF_MIN_DF,
+        max_df=TFIDF_MAX_DF,
+    )
 
-    X_train, X_test, col_transformer = scale_features(X_train, X_test)
+    X_train = vectorizer.fit_transform(X_train["text"])
+    X_test = vectorizer.transform(X_test["text"])
+
     # ---- Models ----
     models = {
         "Dummy (Majority)": DummyClassifier(strategy="most_frequent"),
@@ -103,14 +107,14 @@ def main():
 
     report_paths = {}
     for name, rep in reports.items():
-        p = ARTIFACT_DIR / f"report_{name.replace(' ', '_')}.txt"
+        p = ARTIFACT_DIR / f"report_no_engineering_{name.replace(' ', '_')}.txt"
         with open(p, "w") as f:
             f.write(rep)
         report_paths[name] = str(p)
 
     cm_paths = {}
     for name, cm in cms.items():
-        p = ARTIFACT_DIR / f"confusion_{name.replace(' ', '_')}.csv"
+        p = ARTIFACT_DIR / f"confusion_no_engineering_{name.replace(' ', '_')}.csv"
         pd.DataFrame(
             cm, index=["True 0", "True 1"], columns=["Pred 0", "Pred 1"]
         ).to_csv(p)
@@ -124,6 +128,7 @@ def main():
         print(f"[INFO] {name} report: {p}")
     for name, p in cm_paths.items():
         print(f"[INFO] {name} confusion matrix: {p}")
+
 
 if __name__ == "__main__":
     main()
