@@ -36,7 +36,7 @@ def compute_metrics(eval_pred):
     predictions = np.argmax(predictions, axis=1)
     return accuracy_metric.compute(predictions=predictions, references=labels)
 
-def bert_main():
+def main():
     print("[INFO] BERT model loading and preprocessing data...")
     cols = ["subject", "body", "label"]
     df = pd.read_csv("data/Enron.csv", usecols=cols)
@@ -52,11 +52,7 @@ def bert_main():
 
     df.dropna(subset=['label'], inplace=True)
 
-    df["text"] = "Sender: "+df["sender"].apply(clean_text) + \
-    " Receiver: " + df["receiver"].apply(clean_text) + \
-    " Date: " + df["date"].apply(clean_text) + \
-    " Subject: " + df["subject"].apply(clean_text) + \
-    " Body: " + df["body"].apply(clean_text)
+    df["text"] = "Subject: " + df["subject"].apply(clean_text) +  "Body: " + df["body"].apply(clean_text)
     
     x = df["text"]
     y = df["label"].astype("float")
@@ -111,3 +107,7 @@ def bert_main():
     print("[INFO] Evaluating BERT model...")
     test_results = trainer.evaluate(eval_dataset=test_dataset)
     print("Model Evaluation Summary (BERT):", test_results)
+
+
+if __name__ == "__main__":
+    main()
