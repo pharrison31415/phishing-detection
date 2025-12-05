@@ -107,14 +107,14 @@ def main():
 
     report_paths = {}
     for name, rep in reports.items():
-        p = ARTIFACT_DIR / f"report_{name.replace(' ', '_')}.txt"
+        p = ARTIFACT_DIR / f"report_no_engineering_{name.replace(' ', '_')}.txt"
         with open(p, "w") as f:
             f.write(rep)
         report_paths[name] = str(p)
 
     cm_paths = {}
     for name, cm in cms.items():
-        p = ARTIFACT_DIR / f"confusion_{name.replace(' ', '_')}.csv"
+        p = ARTIFACT_DIR / f"confusion_no_engineering_{name.replace(' ', '_')}.csv"
         pd.DataFrame(
             cm, index=["True 0", "True 1"], columns=["Pred 0", "Pred 1"]
         ).to_csv(p)
