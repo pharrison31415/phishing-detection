@@ -80,7 +80,7 @@ benign communication.
 ## Repository setup
 
 1. Place dataset
-    - Put CEAS_08.csv in data/.
+    - Put Enron.csv, Nazario.csv, and Nigerian_Fraud.csv in data/ at root directory
 2. Create and activate a virtual environment
 
 ### macOS/Linux
