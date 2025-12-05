@@ -3,9 +3,9 @@ import re
 import pandas as pd
 from sklearn.compose import ColumnTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.impute import SimpleImputer
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler, FunctionTransformer
+from sklearn.preprocessing import FunctionTransformer, StandardScaler
+from sklearn.impute import SimpleImputer
 
 from src.constants import (
     EMAIL_RE,
@@ -14,7 +14,8 @@ from src.constants import (
     TFIDF_MAX_FEATURES,
     TFIDF_MAX_DF,
     TFIDF_MIN_DF,
-    TFIDF_NGRAM_RANGE
+    TFIDF_NGRAM_RANGE,
+    URL_RE,
 )
 from sklearn.model_selection import train_test_split
 
@@ -22,7 +23,6 @@ from sklearn.model_selection import train_test_split
 def clean_text(s: str) -> str:
     if type(s) != str:
         return ""
-
     if len(s) == 0:
         return ""
     s = html.unescape(str(s))
@@ -43,8 +43,8 @@ def extract_sender_email_domain(sender):
     return "", ""
 
 
-def preprocess_emails(data: pd.DataFrame):
-    # ---- Preprocess text data to remove non next data ----
+def preprocess_emails(data: pd.DataFrame, features: bool = True):
+    # ---- Preprocess text data ----
     print("[INFO] Cleaning text fields...")
     data["subject_clean"] = data["subject"].apply(clean_text)
     data["body_clean"] = data["body"].apply(clean_text)
@@ -52,12 +52,15 @@ def preprocess_emails(data: pd.DataFrame):
             data["subject_clean"].fillna("") + " " + data["body_clean"].fillna("")
     ).str.strip()
 
-    data["subject_len"] = data["subject_clean"].str.len().fillna(0)
-    data["body_len"] = data["body_clean"].str.len().fillna(0)
-    data["exclaim_count"] = data["body"].fillna("").astype(str).str.count("!")
-
     y = data["label"]
-    X = data[["text", "subject_len", "body_len", "exclaim_count"]]
+
+    if features:
+        data["subject_len"] = data["subject_clean"].str.len().fillna(0)
+        data["body_len"] = data["body_clean"].str.len().fillna(0)
+        data["exclaim_count"] = data["body"].fillna("").astype(str).str.count("!")
+        X = data[["text", "subject_len", "body_len", "exclaim_count"]]
+    else:
+        X = data[["text"]]
 
     print("[INFO] Splitting train/test (stratified)...")
     X_train, X_test, y_train, y_test = train_test_split(
