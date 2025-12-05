@@ -52,11 +52,7 @@ def main():
 
     df.dropna(subset=['label'], inplace=True)
 
-    df["text"] = "Sender: "+df["sender"].apply(clean_text) + \
-    " Receiver: " + df["receiver"].apply(clean_text) + \
-    " Date: " + df["date"].apply(clean_text) + \
-    " Subject: " + df["subject"].apply(clean_text) + \
-    " Body: " + df["body"].apply(clean_text)
+    df["text"] = "Subject: " + df["subject"].apply(clean_text) +  "Body: " + df["body"].apply(clean_text)
     
     x = df["text"]
     y = df["label"].astype("float")
